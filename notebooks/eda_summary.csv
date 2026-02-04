@@ -1,0 +1,17 @@
+Metric,Value
+Total Images,1574
+Train Images,929
+Val Images,550
+Test Images,95
+Number of Classes,6
+Most Common Format,JPG (95%)
+Median Width,720
+Median Height,550
+Median Aspect Ratio,1.34
+Class Imbalance Ratio,1.34
+RGB Mean (R),0.4245
+RGB Mean (G),0.4438
+RGB Mean (B),0.4867
+RGB Std (R),0.2680
+RGB Std (G),0.2532
+RGB Std (B),0.2502
