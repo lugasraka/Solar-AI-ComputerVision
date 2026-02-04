@@ -65,5 +65,4 @@ Thumbs.db
 
 # Results
 results/
-outputs/*.pdf
-notebooks/*_executed.ipynb
+outputs/
