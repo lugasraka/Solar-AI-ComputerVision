@@ -4,6 +4,7 @@ Creates professional PDF reports with predictions and visualizations
 """
 
 import os
+import tempfile
 from pathlib import Path
 from datetime import datetime
 from io import BytesIO
@@ -21,8 +22,12 @@ import numpy as np
 class PDFReportGenerator:
     """Generate professional PDF reports for batch predictions"""
     
-    def __init__(self, output_dir='../outputs'):
-        self.output_dir = Path(output_dir)
+    def __init__(self, output_dir=None):
+        # Use temp directory for Gradio compatibility
+        if output_dir is None:
+            self.output_dir = Path(tempfile.gettempdir()) / 'solarvision_outputs'
+        else:
+            self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.styles = getSampleStyleSheet()
         

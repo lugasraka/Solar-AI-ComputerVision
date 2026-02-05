@@ -431,11 +431,13 @@ if __name__ == "__main__":
     app = create_interface()
     
     # Launch with Hugging Face compatible settings
+    import tempfile
     app.launch(
         server_name="0.0.0.0",
         server_port=7860,
         share=True,  # Generate public link
         show_error=True,
         quiet=False,
-        theme=gr.themes.Soft()
+        theme=gr.themes.Soft(),
+        allowed_paths=[tempfile.gettempdir(), "outputs"]  # Allow access to temp and outputs directories
     )
