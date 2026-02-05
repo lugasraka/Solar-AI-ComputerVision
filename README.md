@@ -7,6 +7,8 @@
 
 **AI-powered computer vision system for automated detection and classification of solar panel defects in photovoltaic installations.**
 
+![SolarVision-AI-Screenshot](image.png)
+
 ---
 
 ## Executive Summary
@@ -21,6 +23,8 @@ SolarVision AI is a production-ready machine learning system that automates defe
 | Inspection Speed | 100-500 panels/day | 5,000+ panels/day | **10x faster** |
 | Inspection Frequency | Quarterly | Monthly | **3x more frequent** |
 | Critical Defect Detection | 75% | >90% | **+15% accuracy** |
+
+![SolarVision-AI-2](image-1.png)
 
 ---
 
