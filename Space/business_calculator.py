@@ -51,9 +51,38 @@ class BusinessCalculator:
         time_saved_per_inspection = manual_hours_per_inspection - ai_hours_per_inspection
         total_time_saved_annual = time_saved_per_inspection * self.ai_inspections_per_year
         
-        # Efficiency gains
-        additional_energy_yield = farm_size_mw * 1000 * self.detection_accuracy_improvement  # kWh
-        energy_value = additional_energy_yield * 0.10  # Assuming $0.10 per kWh
+        # Efficiency gains - realistic calculation based on defect detection
+        # Industry data: ~8% of panels have defects, avg 20% power loss per defect
+        typical_defect_rate = 0.08  # 8% of panels have defects
+        avg_power_loss_per_defect = 0.20  # 20% power loss per defective panel
+        peak_sun_hours_per_day = 5  # Average peak sun hours
+        
+        # Calculate energy saved through early defect detection
+        panels_with_defects = panel_count * typical_defect_rate
+        power_loss_per_panel_kw = (self.average_panel_wattage / 1000) * avg_power_loss_per_defect
+        total_power_loss_mw = (panels_with_defects * power_loss_per_panel_kw) / 1000
+        
+        # Annual energy loss from defects (if undetected)
+        annual_energy_loss_mwh = total_power_loss_mw * peak_sun_hours_per_day * 365
+        
+        # 15% better detection = finding 15% more defects 3 months earlier (quarterly→monthly)
+        # Each month earlier detection saves 1/12 of annual loss for those panels
+        months_saved = 3  # Monthly vs quarterly detection
+        detection_improvement = 0.15  # 15% better detection rate
+        energy_saved_mwh = annual_energy_loss_mwh * detection_improvement * (months_saved / 12)
+        energy_saved_kwh = energy_saved_mwh * 1000
+        
+        energy_value = energy_saved_kwh * 0.10  # $0.10 per kWh
+        
+        # Store calculation details for transparency
+        energy_calculation_details = {
+            'panels_with_defects': int(panels_with_defects),
+            'total_power_loss_mw': total_power_loss_mw,
+            'annual_energy_loss_mwh': annual_energy_loss_mwh,
+            'energy_saved_mwh': energy_saved_mwh,
+            'detection_improvement': detection_improvement,
+            'months_saved': months_saved
+        }
         
         # Payback period (if any implementation costs)
         implementation_cost = 50000  # One-time setup cost estimate
@@ -67,12 +96,13 @@ class BusinessCalculator:
             'annual_savings': annual_savings,
             'cost_reduction_pct': cost_reduction_pct,
             'time_saved_hours': total_time_saved_annual,
-            'additional_energy_yield_kwh': additional_energy_yield,
+            'additional_energy_yield_kwh': energy_saved_kwh,
             'energy_value': energy_value,
             'total_annual_benefit': annual_savings + energy_value,
             'inspection_frequency_increase': f"{self.manual_inspections_per_year}x → {self.ai_inspections_per_year}x",
             'payback_months': max(0, payback_months),
-            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'energy_calculation_details': energy_calculation_details
         }
     
     def generate_report_text(self, metrics):

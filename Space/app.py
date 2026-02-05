@@ -372,8 +372,9 @@ def generate_kpi_cards_html(kpis):
 
 
 def create_business_charts(metrics):
-    """Create comprehensive business visualization charts"""
+    """Create comprehensive business visualization charts with tooltips"""
     fig = plt.figure(figsize=(16, 5))
+    fig.patch.set_facecolor('white')
     
     # Chart 1: Side-by-Side Cost Comparison Bar Chart
     ax1 = plt.subplot(131)
@@ -417,6 +418,14 @@ def create_business_charts(metrics):
     # Format y-axis as currency
     ax1.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x/1000:.0f}K'))
     
+    # Add methodology note
+    methodology_text = f"""Method: Manual=${calculator.manual_cost_per_panel}/panel × {calculator.manual_inspections_per_year}/year
+AI=${calculator.ai_cost_per_panel}/panel × {calculator.ai_inspections_per_year}/year
+Savings=${savings/1000:.0f}K ({savings_pct:.0f}% reduction)"""
+    ax1.text(0.5, -0.15, methodology_text, transform=ax1.transAxes,
+            ha='center', va='top', fontsize=8, style='italic', color='#666',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#f0f0f0', alpha=0.5))
+    
     # Chart 2: Benefits Breakdown (Horizontal Bar)
     ax2 = plt.subplot(132)
     benefits = ['Cost\nSavings', 'Energy\nValue', 'Total\nBenefit']
@@ -433,6 +442,18 @@ def create_business_charts(metrics):
         label = f'${width/1000:.0f}K' if width >= 1000 else f'${width:.0f}'
         ax2.text(width + max(values)*0.01, bar.get_y() + bar.get_height()/2,
                 label, ha='left', va='center', fontsize=10, fontweight='bold')
+    
+    # Add energy calculation note
+    if 'energy_calculation_details' in metrics:
+        energy_details = metrics['energy_calculation_details']
+        energy_text = f"""Energy Value Calculation:
+• {energy_details['panels_with_defects']:,} defective panels detected
+• {energy_details['energy_saved_mwh']:.0f} MWh saved through early detection
+• Based on 15% better detection, 3 months earlier
+• Energy value: ${metrics['energy_value']/1000:.0f}K/year"""
+        ax2.text(0.5, -0.15, energy_text, transform=ax2.transAxes,
+                ha='center', va='top', fontsize=8, style='italic', color='#666',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='#fff9e6', alpha=0.7))
     
     # Chart 3: Cost Reduction Gauge
     ax3 = plt.subplot(133)
@@ -465,9 +486,18 @@ def create_business_charts(metrics):
     ax3.set_ylim(-0.8, 1.2)
     ax3.set_aspect('equal')
     ax3.axis('off')
-    ax3.set_title('Efficiency Gain', fontsize=14, fontweight='bold', pad=20)
+    ax3.set_title('Cost Efficiency\nImprovement', fontsize=14, fontweight='bold', pad=20)
+    
+    # Add gauge interpretation note
+    gauge_text = f"""Formula: (Manual Cost - AI Cost) / Manual Cost × 100
+Your Result: {reduction_pct:.1f}% operational cost reduction
+Interpretation: Save ${reduction_pct:.0f} of every $100 spent on manual inspection"""
+    ax3.text(0.5, -0.15, gauge_text, transform=ax3.transAxes,
+            ha='center', va='top', fontsize=8, style='italic', color='#666',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#e8f5e9', alpha=0.5))
     
     plt.tight_layout()
+    plt.subplots_adjust(bottom=0.25)  # Make room for notes
     return fig
 
 
