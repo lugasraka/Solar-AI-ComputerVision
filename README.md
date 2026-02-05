@@ -58,6 +58,32 @@ SolarVision AI delivers an end-to-end automated defect detection pipeline:
 - **Quality Assurance**: Post-installation commissioning checks
 - **Insurance Claims**: Automated damage assessment
 
+### Demo Features
+
+**Interactive Web Application:**
+
+1. **Single Image Mode**
+   - Instant defect classification with confidence scores
+   - Visual probability distribution chart
+   - Support for all 6 defect classes
+
+2. **Batch Processing**
+   - Upload ZIP files with multiple images
+   - Real-time progress tracking
+   - Sortable results table
+   - Export to CSV or PDF
+
+3. **Business Impact Calculator**
+   - Input: Solar farm size (10-500 MW)
+   - Output: Annual savings, time saved, ROI
+   - Visual cost comparison charts
+   - Professional business report generation
+
+4. **Auto-shutdown**
+   - 30-minute inactivity timeout
+   - Visual countdown timer
+   - Resource management for shared deployments
+
 ---
 
 ## Dataset
@@ -121,7 +147,10 @@ SVM Classifier (RBF kernel)
 | **Feature Extraction** | ResNet18 (torchvision) | Transfer learning backbone |
 | **Classifier** | scikit-learn SVM | Final classification layer |
 | **Augmentation** | Albumentations | Heavy data augmentation |
-| **Interpretability** | Grad-CAM | Visualize model attention |
+| **Web Interface** | Gradio 4.0+ | Interactive demo |
+| **PDF Generation** | ReportLab | Professional reports |
+| **Visualization** | Matplotlib, Plotly | Charts and plots |
+| **Data Processing** | Pandas, NumPy | Data manipulation |
 
 ---
 
@@ -136,6 +165,26 @@ SVM Classifier (RBF kernel)
 
 ### Quick Setup
 
+**Option 1: Run the Interactive Demo (Recommended)**
+```bash
+# Clone repository
+git clone https://github.com/lugasraka/Solar-AI-ComputerVision.git
+cd Solar-AI-ComputerVision
+
+# Create environment
+conda create -n solarvision python=3.9
+conda activate solarvision
+
+# Install demo dependencies
+cd demo
+pip install -r requirements.txt
+
+# Run the demo
+python app.py
+```
+Access at: `http://localhost:7860`
+
+**Option 2: Development/Training**
 ```bash
 # Clone repository
 git clone https://github.com/lugasraka/Solar-AI-ComputerVision.git
@@ -150,6 +199,9 @@ pip install -r requirements.txt
 
 # Download dataset from Kaggle
 # Extract to dataset/ directory
+
+# Run notebooks
+jupyter notebook notebooks/
 ```
 
 ---
@@ -206,26 +258,86 @@ Solar-AI-ComputerVision/
 
 ---
 
+## 🚀 Interactive Demo
+
+### Try It Online
+[![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces/YOUR_USERNAME/solarvision-ai)
+
+**Live Demo Features:**
+- 📷 **Single Image Analysis** - Upload a solar panel image and get instant predictions
+- 📁 **Batch Processing** - Process multiple images via ZIP file upload  
+- 💰 **Business Impact Calculator** - Calculate ROI and cost savings for your solar farm
+- 📊 **Export Results** - Download predictions as CSV or professional PDF reports
+
+### Run Locally
+
+```bash
+cd demo
+pip install -r requirements.txt
+python app.py
+```
+
+Access the demo at: `http://localhost:7860`
+
+---
+
+## Project Structure
+
+```
+Solar-AI-ComputerVision/
+├── notebooks/              # Jupyter notebooks for development
+│   ├── 01_eda.ipynb       # Week 1: Exploratory Data Analysis
+│   ├── 02_data_preprocessing.ipynb  # Week 2: Data pipeline
+│   ├── 03_model_development.ipynb   # Week 3: Model training
+│   └── 04_evaluation_interpretability.ipynb  # Week 4: Evaluation
+├── demo/                   # Production Gradio demo
+│   ├── app.py             # Main application
+│   ├── inference.py       # SVM prediction pipeline
+│   ├── business_calculator.py  # ROI calculator
+│   ├── report_generator.py     # PDF/CSV export
+│   ├── utils.py           # Auto-shutdown & helpers
+│   └── requirements.txt   # Demo dependencies
+├── Space/                  # Hugging Face Spaces deployment
+│   ├── app.py             # Entry point
+│   └── (deployment files)
+├── models/                 # Trained model weights
+│   ├── svm_classifier.pkl
+│   ├── resnet18_end2end_best.pth
+│   └── resnet18_features.pkl
+├── outputs/                # Generated reports & visualizations
+├── random_collection/      # Sample test images
+├── dataset/                # Dataset (not tracked in git)
+├── paper/                  # Research paper PDF
+├── DEPLOYMENT.md          # Deployment guide
+├── requirements.txt       # Main dependencies
+└── README.md              # This file
+```
+
+---
+
 ## Roadmap
 
-### Phase 1: MVP (Completed)
+### Phase 1: MVP ✅ (Completed)
 - [x] Dataset acquisition and EDA
 - [x] Data preprocessing and augmentation pipeline
 - [x] ResNet18 + SVM implementation
 - [x] Model training and hyperparameter tuning
 - [x] Evaluation and benchmarking
 
-### Phase 2: Advanced Features (In Progress)
-- [ ] Ensemble methods (ResNet18+SVM + EfficientNet voting)
-- [ ] Test-Time Augmentation (TTA) for robustness
-- [ ] Defect severity scoring and prioritization
-- [ ] Multi-panel detection (YOLO for full-array images)
+### Phase 2: Advanced Features ✅ (Completed)
+- [x] Interactive Gradio demo with batch processing
+- [x] Business impact calculator with ROI visualization
+- [x] PDF/CSV report generation
+- [x] Auto-shutdown timer for resource management
+- [x] Hugging Face Spaces deployment ready
 
-### Phase 3: Production Deployment (Planned)
+### Phase 3: Production Deployment 🚧 (In Progress)
+- [x] Gradio web interface
+- [x] Hugging Face Spaces deployment
 - [ ] RESTful API (FastAPI)
 - [ ] Edge deployment (NVIDIA Jetson)
 - [ ] Model optimization (TensorRT, ONNX)
-- [ ] Cloud deployment (AWS SageMaker)
+- [ ] AWS/GCP cloud deployment
 
 ---
 
