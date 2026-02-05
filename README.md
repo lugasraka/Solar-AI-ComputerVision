@@ -316,6 +316,8 @@ Access the demo at: `http://localhost:7860`
 
 ---
 
+**Created by**: Raka Adrianto | Sustainability, Digital, Product Management, AI/ML (LinkedIn: [lugasraka](https://www.linkedin.com/in/lugasraka/))
+
 ## Citation
 
 ```bibtex
