@@ -216,13 +216,16 @@ def export_csv():
     timer.reset()
     
     if not processed_results:
-        return None, "No results to export"
+        return gr.update(value=None, visible=False), "No results to export. Please process images first."
     
     try:
         csv_path = report_gen.generate_csv(processed_results)
-        return csv_path, f"CSV saved: {Path(csv_path).name}"
+        if csv_path and os.path.exists(csv_path):
+            return gr.update(value=csv_path, visible=True), f"✅ CSV ready: {Path(csv_path).name}"
+        else:
+            return gr.update(value=None, visible=False), "❌ Failed to generate CSV"
     except Exception as e:
-        return None, f"Error: {str(e)}"
+        return gr.update(value=None, visible=False), f"❌ Error: {str(e)}"
 
 
 def export_pdf():
@@ -230,13 +233,16 @@ def export_pdf():
     timer.reset()
     
     if not processed_results:
-        return None, "No results to export"
+        return gr.update(value=None, visible=False), "No results to export. Please process images first."
     
     try:
         pdf_path = report_gen.generate_report(processed_results)
-        return pdf_path, f"PDF saved: {Path(pdf_path).name}"
+        if pdf_path and os.path.exists(pdf_path):
+            return gr.update(value=pdf_path, visible=True), f"✅ PDF ready: {Path(pdf_path).name}"
+        else:
+            return gr.update(value=None, visible=False), "❌ Failed to generate PDF"
     except Exception as e:
-        return None, f"Error: {str(e)}"
+        return gr.update(value=None, visible=False), f"❌ Error: {str(e)}"
 
 
 def calculate_business(farm_size):
@@ -369,6 +375,11 @@ def create_interface():
                     export_pdf_btn = gr.Button("📄 Generate PDF Report")
                     export_status = gr.Textbox(label="Export Status", value="")
                 
+                # File outputs for exports (need to be defined before use)
+                with gr.Row():
+                    csv_output = gr.File(label="Download CSV", visible=False)
+                    pdf_output = gr.File(label="Download PDF", visible=False)
+                
                 # Event handlers
                 batch_btn.click(
                     fn=predict_batch_zip,
@@ -376,8 +387,8 @@ def create_interface():
                     outputs=[results_table, batch_status, export_status]
                 )
                 
-                export_csv_btn.click(fn=export_csv, outputs=[gr.File(), export_status])
-                export_pdf_btn.click(fn=export_pdf, outputs=[gr.File(), export_status])
+                export_csv_btn.click(fn=export_csv, outputs=[csv_output, export_status])
+                export_pdf_btn.click(fn=export_pdf, outputs=[pdf_output, export_status])
             
             # Tab 3: Business Impact
             with gr.TabItem("💰 Business Impact"):
