@@ -1,6 +1,6 @@
 """
 SolarVision AI - Gradio Demo Application
-Interactive web interface for PV panel defect detection
+Interactive web interface for PV panel defect detection with Grad-CAM support
 """
 
 import os
@@ -20,7 +20,7 @@ from PIL import Image
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent))
 
-from inference import get_predictor
+from inference import get_predictor, GRADCAM_AVAILABLE
 from business_calculator import BusinessCalculator
 from report_generator import PDFReportGenerator
 from utils import AutoShutdownTimer, ProgressTracker, format_confidence, get_confidence_color
@@ -39,7 +39,9 @@ Upload images of solar panels to detect defects including:
 - Physical damage
 - Snow coverage
 
-**Model**: ResNet18 + SVM (96.8% accuracy on test set)
+**Models Available:**
+- **SVM Mode**: ResNet18 + SVM (96.8% accuracy) - Higher accuracy
+- **CNN Mode**: End-to-End ResNet18 (95.8% accuracy) - With Grad-CAM explainability
 
 *Auto-closes after 30 minutes of inactivity*
 """
@@ -62,37 +64,64 @@ def load_predictor():
     return predictor
 
 
-def predict_single(image):
-    """Process single image"""
+def predict_single(image, model_choice):
+    """Process single image with selected model"""
     global processed_results
     
     # Reset timer on activity
     timer.reset()
     
     if image is None:
-        return None, "Please upload an image", "", ""
+        return None, "Please upload an image", "", "", None, None, None
     
     try:
         # Handle different image input types from Gradio
         if isinstance(image, str):
             # Image is already a file path
             temp_path = Path(image)
+            display_image = Image.open(image)
         elif isinstance(image, np.ndarray):
             # Image is a numpy array, save it
             temp_path = Path(tempfile.gettempdir()) / f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             Image.fromarray(image).save(temp_path)
+            display_image = image
         elif hasattr(image, 'save'):
             # Image is a PIL Image object
             temp_path = Path(tempfile.gettempdir()) / f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             image.save(temp_path)
+            display_image = image
         else:
-            return None, f"Unsupported image type: {type(image)}", "", ""
+            return None, f"Unsupported image type: {type(image)}", "", "", None, None, None
+        
+        # Determine model to use
+        use_cnn = (model_choice == "CNN with Grad-CAM (95.8%)")
         
         # Get prediction
-        pred = load_predictor().predict(str(temp_path))
+        if use_cnn and GRADCAM_AVAILABLE:
+            # Use CNN with Grad-CAM
+            pred, gradcam_images = load_predictor().predict_with_gradcam(str(temp_path))
+            
+            # Extract Grad-CAM images
+            gradcam_heatmap = gradcam_images['heatmap'] if gradcam_images else None
+            gradcam_overlay = gradcam_images['overlay'] if gradcam_images else None
+            gradcam_original = gradcam_images['original'] if gradcam_images else None
+        else:
+            # Use SVM or CNN without Grad-CAM
+            pred = load_predictor().predict(str(temp_path), use_cnn=use_cnn)
+            gradcam_heatmap = None
+            gradcam_overlay = None
+            gradcam_original = None
+        
         processed_results = [pred]
         
         # Create results display
+        gradcam_status = ""
+        if use_cnn:
+            if GRADCAM_AVAILABLE:
+                gradcam_status = f"<p style='font-size: 12px; color: #3498db;'>🔍 Grad-CAM visualization enabled</p>"
+            else:
+                gradcam_status = f"<p style='font-size: 12px; color: #e74c3c;'>⚠️ Grad-CAM not available (install grad-cam)</p>"
+        
         result_html = f"""
         <div style='padding: 20px; border-radius: 10px; background-color: #f8f9fa;'>
             <h3 style='color: {get_confidence_color(pred["confidence"])};'>
@@ -101,6 +130,10 @@ def predict_single(image):
             <p style='font-size: 18px;'>
                 Confidence: <strong>{format_confidence(pred['confidence'])}</strong>
             </p>
+            <p style='font-size: 14px; color: #7f8c8d;'>
+                Model: {pred['model_used']}
+            </p>
+            {gradcam_status}
         </div>
         """
         
@@ -122,26 +155,21 @@ def predict_single(image):
         
         plt.tight_layout()
         
-        # Load image for display (if it was a temp file we created, keep it for display then clean up)
-        if isinstance(image, str):
-            # Original was a file path, load it for display
-            display_image = Image.open(image)
-        elif isinstance(image, np.ndarray):
-            display_image = image
-        else:
-            display_image = image
-        
         # Clean up temp file only if we created it
         if not isinstance(image, str):
             temp_path.unlink(missing_ok=True)
         
-        return display_image, result_html, fig, pred['filename']
+        return (display_image, result_html, fig, pred['filename'], 
+                gradcam_original, gradcam_heatmap, gradcam_overlay)
         
     except Exception as e:
-        return image, f"Error: {str(e)}", None, ""
+        import traceback
+        error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        return image, f"Error: {str(e)}", None, "", None, None, None
 
 
-def predict_batch_zip(zip_file, progress=gr.Progress()):
+def predict_batch_zip(zip_file, model_choice, progress=gr.Progress()):
     """Process batch of images from ZIP file"""
     global processed_results
     
@@ -167,13 +195,16 @@ def predict_batch_zip(zip_file, progress=gr.Progress()):
         if not image_files:
             return pd.DataFrame(), "No images found in ZIP file", "No results"
         
+        # Determine model to use
+        use_cnn = (model_choice == "CNN with Grad-CAM (95.8%)")
+        
         # Process images
         results = []
         tracker = ProgressTracker(len(image_files))
         
         for i, img_path in enumerate(image_files):
             try:
-                pred = load_predictor().predict(str(img_path))
+                pred = load_predictor().predict(str(img_path), use_cnn=use_cnn)
                 results.append(pred)
                 
                 # Update progress
@@ -194,13 +225,15 @@ def predict_batch_zip(zip_file, progress=gr.Progress()):
                     'Filename': r['filename'],
                     'Prediction': r['predicted_class'],
                     'Confidence': f"{r['confidence']:.1%}",
-                    'Top Class': r['top3'][0][0] if r['top3'] else 'N/A'
+                    'Top Class': r['top3'][0][0] if r['top3'] else 'N/A',
+                    'Model': 'CNN' if use_cnn else 'SVM'
                 })
         
         df = pd.DataFrame(df_data)
         
         # Summary text
-        summary = f"Processed {len(results)} images successfully"
+        model_str = "CNN" if use_cnn else "SVM"
+        summary = f"Processed {len(results)} images using {model_str}"
         if any('error' in r for r in results):
             errors = sum(1 for r in results if 'error' in r)
             summary += f" ({errors} errors)"
@@ -208,7 +241,33 @@ def predict_batch_zip(zip_file, progress=gr.Progress()):
         return df, summary, "Ready to export"
         
     except Exception as e:
+        import traceback
+        print(f"Batch processing error: {traceback.format_exc()}")
         return pd.DataFrame(), f"Error processing ZIP: {str(e)}", "Error"
+
+
+def update_model_info(model_choice):
+    """Update model information display"""
+    if model_choice == "SVM (96.8% accuracy)":
+        return """
+        **SVM Mode (ResNet18 + SVM)**
+        - Accuracy: 96.84%
+        - Grad-CAM: Not available
+        - Best for: Maximum accuracy
+        
+        Uses ResNet18 for feature extraction and SVM for classification.
+        """
+    else:
+        gradcam_status = "✅ Available" if GRADCAM_AVAILABLE else "❌ Not installed"
+        return f"""
+        **CNN Mode (End-to-End ResNet18)**
+        - Accuracy: 95.79%
+        - Grad-CAM: {gradcam_status}
+        - Best for: Explainable AI with visual attention maps
+        
+        Full CNN model that generates Grad-CAM visualizations showing 
+        which regions the model focused on for its prediction.
+        """
 
 
 def export_csv():
@@ -314,8 +373,6 @@ def shutdown_demo():
     """Graceful shutdown"""
     print("[INFO] Auto-shutdown triggered")
     timer.stop()
-    # Note: Gradio doesn't support programmatic shutdown, 
-    # but we can show a message
     return "Demo has been closed due to inactivity. Please refresh to restart."
 
 
@@ -344,25 +401,61 @@ def create_interface():
             with gr.TabItem("📷 Single Image"):
                 with gr.Row():
                     with gr.Column(scale=1):
+                        # Model selector
+                        model_choice = gr.Dropdown(
+                            choices=["SVM (96.8% accuracy)", "CNN with Grad-CAM (95.8%)"],
+                            value="SVM (96.8% accuracy)",
+                            label="Select Model",
+                            info="SVM: Higher accuracy | CNN: Explainable with Grad-CAM"
+                        )
+                        model_info = gr.Markdown(update_model_info("SVM (96.8% accuracy)"))
+                        
                         input_image = gr.Image(label="Upload Solar Panel Image", type="filepath")
                         predict_btn = gr.Button("🔍 Analyze", variant="primary")
                     
-                    with gr.Column(scale=1):
-                        output_image = gr.Image(label="Input Image")
-                        result_display = gr.HTML(label="Prediction Result")
+                    with gr.Column(scale=2):
+                        with gr.Row():
+                            output_image = gr.Image(label="Input Image")
+                            result_display = gr.HTML(label="Prediction Result")
+                        
                         confidence_plot = gr.Plot(label="Confidence Scores")
                         filename_text = gr.Textbox(label="Filename", visible=False)
                 
+                # Grad-CAM visualization section (conditionally shown)
+                with gr.Row(visible=GRADCAM_AVAILABLE) as gradcam_row:
+                    gr.Markdown("### 🔍 Grad-CAM Visualization (CNN Mode Only)")
+                
+                with gr.Row(visible=GRADCAM_AVAILABLE):
+                    gradcam_original = gr.Image(label="Original", visible=True)
+                    gradcam_heatmap = gr.Image(label="Grad-CAM Heatmap", visible=True)
+                    gradcam_overlay = gr.Image(label="Overlay", visible=True)
+                
+                # Event handlers
+                model_choice.change(
+                    fn=update_model_info,
+                    inputs=model_choice,
+                    outputs=model_info
+                )
+                
                 predict_btn.click(
                     fn=predict_single,
-                    inputs=input_image,
-                    outputs=[output_image, result_display, confidence_plot, filename_text]
+                    inputs=[input_image, model_choice],
+                    outputs=[output_image, result_display, confidence_plot, filename_text,
+                            gradcam_original, gradcam_heatmap, gradcam_overlay]
                 )
             
             # Tab 2: Batch Processing
             with gr.TabItem("📁 Batch Processing"):
                 with gr.Row():
                     with gr.Column():
+                        # Model selector for batch
+                        batch_model_choice = gr.Dropdown(
+                            choices=["SVM (96.8% accuracy)", "CNN with Grad-CAM (95.8%)"],
+                            value="SVM (96.8% accuracy)",
+                            label="Select Model for Batch Processing",
+                            info="Grad-CAM not available in batch mode"
+                        )
+                        
                         zip_input = gr.File(label="Upload ZIP file with images", file_types=['.zip'])
                         batch_btn = gr.Button("🚀 Process Batch", variant="primary")
                     
@@ -383,7 +476,7 @@ def create_interface():
                 # Event handlers
                 batch_btn.click(
                     fn=predict_batch_zip,
-                    inputs=zip_input,
+                    inputs=[zip_input, batch_model_choice],
                     outputs=[results_table, batch_status, export_status]
                 )
                 
@@ -417,11 +510,8 @@ def create_interface():
         gr.Markdown("---")
         gr.Markdown("""
         **SolarVision AI** | Automated PV Panel Defect Detection System  
-        Model: ResNet18 + SVM (96.8% accuracy) | Dataset: Alicja Lenarczyk, PhD
+        Dual Model Support: SVM (96.8%) & CNN with Grad-CAM (95.8%) | Dataset: Alicja Lenarczyk, PhD
         """)
-        
-        # Timer will update on user interactions only
-        # Note: Auto-shutdown works in background but display updates on activity
     
     return demo
 

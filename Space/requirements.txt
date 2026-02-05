@@ -24,3 +24,6 @@ reportlab>=3.6.0
 
 # Utilities
 tqdm>=4.66.0
+
+# Grad-CAM for Explainable AI
+grad-cam>=1.5.0
