@@ -210,17 +210,24 @@ jupyter notebook notebooks/
 
 ```
 Solar-AI-ComputerVision/
-├── notebooks/           # EDA and experiments
-│   ├── 01_eda.ipynb    # Exploratory Data Analysis
-│   └── *.png           # Analysis visualizations
-├── dataset/             # Data directory (not tracked)
-│   ├── train/
-│   ├── val/
-│   └── test/
-├── paper/               # Research paper PDF
-├── requirements.txt     # Python dependencies
-├── README.md           # Project documentation
-└── PRD.md              # Product Requirements Document
+├── notebooks/              # Jupyter notebooks (Weeks 1-4)
+│   ├── 01_eda.ipynb
+│   ├── 02_data_preprocessing.ipynb
+│   ├── 03_model_development.ipynb
+│   └── 04_evaluation_interpretability.ipynb
+├── demo/                   # Production Gradio demo
+│   ├── app.py             # Main application
+│   ├── inference.py       # SVM pipeline
+│   ├── business_calculator.py
+│   ├── report_generator.py
+│   ├── utils.py
+│   └── requirements.txt
+├── models/                 # Trained model weights
+├── outputs/                # Reports & visualizations
+├── dataset/                # (not tracked in git)
+├── requirements.txt
+├── README.md
+└── DEPLOYMENT.md
 ```
 
 ---
@@ -280,38 +287,6 @@ python app.py
 Access the demo at: `http://localhost:7860`
 
 ---
-
-## Project Structure
-
-```
-Solar-AI-ComputerVision/
-├── notebooks/              # Jupyter notebooks for development
-│   ├── 01_eda.ipynb       # Week 1: Exploratory Data Analysis
-│   ├── 02_data_preprocessing.ipynb  # Week 2: Data pipeline
-│   ├── 03_model_development.ipynb   # Week 3: Model training
-│   └── 04_evaluation_interpretability.ipynb  # Week 4: Evaluation
-├── demo/                   # Production Gradio demo
-│   ├── app.py             # Main application
-│   ├── inference.py       # SVM prediction pipeline
-│   ├── business_calculator.py  # ROI calculator
-│   ├── report_generator.py     # PDF/CSV export
-│   ├── utils.py           # Auto-shutdown & helpers
-│   └── requirements.txt   # Demo dependencies
-├── Space/                  # Hugging Face Spaces deployment
-│   ├── app.py             # Entry point
-│   └── (deployment files)
-├── models/                 # Trained model weights
-│   ├── svm_classifier.pkl
-│   ├── resnet18_end2end_best.pth
-│   └── resnet18_features.pkl
-├── outputs/                # Generated reports & visualizations
-├── random_collection/      # Sample test images
-├── dataset/                # Dataset (not tracked in git)
-├── paper/                  # Research paper PDF
-├── DEPLOYMENT.md          # Deployment guide
-├── requirements.txt       # Main dependencies
-└── README.md              # This file
-```
 
 ---
 
