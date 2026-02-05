@@ -65,4 +65,4 @@ Thumbs.db
 
 # Results
 results/
-outputs/
+# outputs/  # Allow outputs for sharing Week 4 artifacts

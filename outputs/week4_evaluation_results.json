@@ -1,0 +1,27 @@
+{
+  "week4_analysis": {
+    "cnn_misclassified": 4,
+    "svm_misclassified": 5,
+    "cnn_mean_confidence_correct": 0.9798387164597983,
+    "cnn_mean_confidence_wrong": 0.8462815061211586,
+    "svm_mean_confidence_correct": 0.8881565408866475,
+    "svm_mean_confidence_wrong": 0.5248382941171239,
+    "exported_examples": 4,
+    "statistical_test": {
+      "mcnemar_statistic": 4.0,
+      "mcnemar_pvalue": 1.0,
+      "significant_difference": false
+    }
+  },
+  "generated_artifacts": [
+    "../outputs/misclassified_summary.csv",
+    "../outputs/misclassified/*.png",
+    "../outputs/gradcam/cnn_gradcam_samples.png",
+    "../outputs/confusion_matrix_cnn_interactive.html",
+    "../outputs/confusion_matrix_svm_interactive.html",
+    "../outputs/confidence_distribution_interactive.html",
+    "../outputs/threshold_analysis_cnn.html",
+    "../outputs/threshold_analysis_svm.html",
+    "../outputs/BUSINESS_REPORT.md"
+  ]
+}
