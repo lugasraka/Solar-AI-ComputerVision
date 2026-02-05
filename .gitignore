@@ -32,13 +32,13 @@ dataset/
 data/
 *.csv
 *.h5
-*.pkl
-*.pth
+# *.pkl
+# *.pth
 *.pt
 
-# Model weights
-models/
-*.weights
+# Model weights - allowing trained models for this project
+# models/
+# *.weights
 
 # IDE
 .vscode/
