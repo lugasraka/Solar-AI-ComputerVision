@@ -305,52 +305,145 @@ def export_pdf():
 
 
 def calculate_business(farm_size):
-    """Calculate business impact"""
+    """Calculate business impact with KPI cards"""
     timer.reset()
     
     try:
         metrics = calculator.calculate(farm_size)
-        report_text = calculator.generate_report_text(metrics)
+        kpis = calculator.get_kpi_cards(metrics)
         
-        # Create visualization
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        # Generate KPI cards HTML
+        kpi_html = generate_kpi_cards_html(kpis)
         
-        # Cost comparison
-        cost_labels = ['Manual\nInspection', 'AI-Powered\nInspection']
-        cost_values = [metrics['manual_annual_cost'], metrics['ai_annual_cost']]
-        bars1 = ax1.bar(cost_labels, cost_values, color=['#e74c3c', '#27ae60'])
-        ax1.set_ylabel('Annual Cost (USD)', fontsize=12)
-        ax1.set_title('Cost Comparison', fontsize=14, fontweight='bold')
-        ax1.set_yticklabels([f'${x/1000:.0f}K' for x in ax1.get_yticks()])
+        # Generate summary text
+        summary_text = calculator.generate_kpi_summary(metrics)
         
-        # Add value labels
-        for bar in bars1:
-            height = bar.get_height()
-            ax1.text(bar.get_x() + bar.get_width()/2., height,
-                    f'${height/1000:.0f}K',
-                    ha='center', va='bottom', fontsize=10)
+        # Create enhanced visualization
+        fig = create_business_charts(metrics)
         
-        # Benefits breakdown
-        benefit_labels = ['Cost\nSavings', 'Energy\nValue']
-        benefit_values = [metrics['annual_savings'], metrics['energy_value']]
-        bars2 = ax2.bar(benefit_labels, benefit_values, color=['#3498db', '#f39c12'])
-        ax2.set_ylabel('Annual Value (USD)', fontsize=12)
-        ax2.set_title('Annual Benefits', fontsize=14, fontweight='bold')
-        ax2.set_yticklabels([f'${x/1000:.0f}K' for x in ax2.get_yticks()])
-        
-        # Add value labels
-        for bar in bars2:
-            height = bar.get_height()
-            ax2.text(bar.get_x() + bar.get_width()/2., height,
-                    f'${height/1000:.0f}K',
-                    ha='center', va='bottom', fontsize=10)
-        
-        plt.tight_layout()
-        
-        return report_text, fig, metrics['annual_savings'], metrics['time_saved_hours']
+        return kpi_html, summary_text, fig
         
     except Exception as e:
-        return f"Error: {str(e)}", None, 0, 0
+        import traceback
+        print(f"Error in calculate_business: {traceback.format_exc()}")
+        return f"Error: {str(e)}", "", None
+
+
+def generate_kpi_cards_html(kpis):
+    """Generate HTML for KPI cards"""
+    cards_html = """
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">
+    """
+    
+    for key, kpi in kpis.items():
+        cards_html += f"""
+        <div style="
+            background: linear-gradient(135deg, {kpi['color']}15, {kpi['color']}05);
+            border-left: 4px solid {kpi['color']};
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <div style="font-size: 24px; margin-bottom: 5px;">{kpi['icon']}</div>
+            <div style="
+                font-size: 28px;
+                font-weight: bold;
+                color: {kpi['color']};
+                margin-bottom: 5px;
+            ">{kpi['value']}</div>
+            <div style="
+                font-size: 12px;
+                font-weight: 600;
+                color: #2c3e50;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 5px;
+            ">{kpi['label']}</div>
+            <div style="
+                font-size: 11px;
+                color: #7f8c8d;
+            ">{kpi['subtitle']}</div>
+        </div>
+        """
+    
+    cards_html += "</div>"
+    return cards_html
+
+
+def create_business_charts(metrics):
+    """Create comprehensive business visualization charts"""
+    fig = plt.figure(figsize=(16, 5))
+    
+    # Chart 1: Cost Comparison (Donut)
+    from matplotlib.patches import Circle
+    ax1 = plt.subplot(131)
+    cost_data = [metrics['manual_annual_cost'], metrics['ai_annual_cost']]
+    colors1 = ['#e74c3c', '#27ae60']
+    ax1.pie(cost_data, labels=['Manual', 'AI-Powered'], 
+            autopct='%1.0f%%', colors=colors1,
+            startangle=90, pctdistance=0.75)
+    # Draw circle for donut
+    centre_circle = Circle((0,0), 0.50, fc='white')
+    ax1.add_patch(centre_circle)
+    ax1.set_title('Annual Cost Breakdown', fontsize=14, fontweight='bold', pad=20)
+    
+    # Add center text
+    total = sum(cost_data)
+    ax1.text(0, 0, f'${total/1000:.0f}K\nTotal', ha='center', va='center', 
+            fontsize=12, fontweight='bold')
+    
+    # Chart 2: Benefits Breakdown (Horizontal Bar)
+    ax2 = plt.subplot(132)
+    benefits = ['Cost\nSavings', 'Energy\nValue', 'Total\nBenefit']
+    values = [metrics['annual_savings'], metrics['energy_value'], metrics['total_annual_benefit']]
+    colors2 = ['#3498db', '#f39c12', '#1abc9c']
+    
+    bars = ax2.barh(benefits, values, color=colors2, alpha=0.8)
+    ax2.set_xlabel('Annual Value (USD)', fontsize=11)
+    ax2.set_title('Benefits Breakdown', fontsize=14, fontweight='bold', pad=20)
+    
+    # Add value labels
+    for bar, val in zip(bars, values):
+        width = bar.get_width()
+        label = f'${width/1000:.0f}K' if width >= 1000 else f'${width:.0f}'
+        ax2.text(width + max(values)*0.01, bar.get_y() + bar.get_height()/2,
+                label, ha='left', va='center', fontsize=10, fontweight='bold')
+    
+    # Chart 3: Cost Reduction Gauge
+    ax3 = plt.subplot(133)
+    reduction_pct = metrics['cost_reduction_pct']
+    
+    # Create gauge
+    theta = np.linspace(0, np.pi, 100)
+    r = 1.0
+    
+    # Background arc
+    ax3.fill_between(np.cos(theta), np.sin(theta), 0, alpha=0.1, color='gray')
+    
+    # Value arc
+    value_theta = theta[int(reduction_pct)] if reduction_pct < 100 else theta[-1]
+    value_arc = theta[:int(reduction_pct)+1] if reduction_pct < 100 else theta
+    ax3.fill_between(np.cos(value_arc), np.sin(value_arc), 0, alpha=0.6, color='#27ae60')
+    
+    # Add needle
+    needle_angle = np.pi * (1 - reduction_pct / 100)
+    ax3.arrow(0, 0, 0.8*np.cos(needle_angle), 0.8*np.sin(needle_angle),
+             head_width=0.05, head_length=0.05, fc='#2c3e50', ec='#2c3e50')
+    
+    # Center text
+    ax3.text(0, -0.3, f'{reduction_pct:.1f}%', ha='center', va='center',
+            fontsize=24, fontweight='bold', color='#27ae60')
+    ax3.text(0, -0.5, 'Cost Reduction', ha='center', va='center',
+            fontsize=11, color='#7f8c8d')
+    
+    ax3.set_xlim(-1.2, 1.2)
+    ax3.set_ylim(-0.8, 1.2)
+    ax3.set_aspect('equal')
+    ax3.axis('off')
+    ax3.set_title('Efficiency Gain', fontsize=14, fontweight='bold', pad=20)
+    
+    plt.tight_layout()
+    return fig
 
 
 def get_timer_status():
@@ -485,25 +578,59 @@ def create_interface():
             
             # Tab 3: Business Impact
             with gr.TabItem("💰 Business Impact"):
+                # Header with slider
                 with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=2):
+                        gr.Markdown("### 📊 Solar Farm ROI Calculator")
+                        gr.Markdown("Calculate the business value of implementing SolarVision AI for automated defect detection.")
+                    with gr.Column(scale=1):
                         farm_size_slider = gr.Slider(
                             minimum=10, maximum=500, value=100, step=10,
-                            label="Solar Farm Size (MW)"
+                            label="Solar Farm Size (MW)",
+                            info="Adjust to see impact on different farm sizes"
                         )
-                        calc_btn = gr.Button("📊 Calculate ROI", variant="primary")
-                    
-                    with gr.Column():
-                        savings_display = gr.Number(label="Annual Savings (USD)", value=0)
-                        time_saved_display = gr.Number(label="Hours Saved per Year", value=0)
+                        calc_btn = gr.Button("🚀 Calculate ROI", variant="primary", size="lg")
                 
-                business_report = gr.Textbox(label="Business Report", lines=20)
-                business_chart = gr.Plot(label="Cost Analysis")
+                # KPI Cards Section
+                kpi_cards = gr.HTML(label="Key Metrics", value="<div style='padding: 20px; color: #7f8c8d; text-align: center;'>Click 'Calculate ROI' to see business impact metrics</div>")
+                
+                # Summary Section
+                with gr.Row():
+                    with gr.Column():
+                        summary_text = gr.Textbox(
+                            label="Executive Summary",
+                            lines=8,
+                            value="Adjust the farm size and click Calculate to see your personalized business case.",
+                            interactive=False
+                        )
+                
+                # Charts Section
+                business_chart = gr.Plot(label="Business Analytics")
+                
+                # Key Insights
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("""
+                        #### 💡 Key Benefits
+                        - **Cost Reduction**: Up to 87% savings on inspection costs
+                        - **Time Efficiency**: 10x faster inspection speed
+                        - **Frequency**: 3x more inspections per year (monthly vs quarterly)
+                        - **Accuracy**: 15% better defect detection
+                        - **Safety**: Proactive identification of electrical hazards
+                        """)
+                    with gr.Column():
+                        gr.Markdown("""
+                        #### 📈 Business Value
+                        - **Immediate**: Reduced operational costs from day one
+                        - **Short-term**: Payback period typically under 6 months
+                        - **Long-term**: Maximize energy yield and panel lifespan
+                        - **Risk Mitigation**: Prevent costly failures and downtime
+                        """)
                 
                 calc_btn.click(
                     fn=calculate_business,
                     inputs=farm_size_slider,
-                    outputs=[business_report, business_chart, savings_display, time_saved_display]
+                    outputs=[kpi_cards, summary_text, business_chart]
                 )
         
         # Footer

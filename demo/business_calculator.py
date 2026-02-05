@@ -124,6 +124,107 @@ class BusinessCalculator:
                 'values': [metrics['annual_savings'], metrics['energy_value']]
             }
         }
+    
+    def format_currency(self, amount):
+        """Format amount as currency with K/M suffix for readability"""
+        if amount >= 1_000_000:
+            return f"${amount/1_000_000:.1f}M"
+        elif amount >= 1_000:
+            return f"${amount/1_000:.0f}K"
+        else:
+            return f"${amount:,.0f}"
+    
+    def format_number(self, num):
+        """Format large numbers with K/M suffix"""
+        if num >= 1_000_000:
+            return f"{num/1_000_000:.1f}M"
+        elif num >= 1_000:
+            return f"{num/1_000:.0f}K"
+        else:
+            return f"{num:,.0f}"
+    
+    def hours_to_days(self, hours):
+        """Convert hours to working days (8 hours/day)"""
+        days = hours / 8
+        if days >= 365:
+            return f"{days/365:.1f} years"
+        elif days >= 30:
+            return f"{days/30:.0f} months"
+        else:
+            return f"{days:.0f} days"
+    
+    def get_kpi_cards(self, metrics):
+        """Generate KPI card data for display"""
+        return {
+            'annual_savings': {
+                'value': self.format_currency(metrics['annual_savings']),
+                'raw_value': metrics['annual_savings'],
+                'label': 'Annual Savings',
+                'icon': '💰',
+                'color': '#27ae60',
+                'subtitle': f"{metrics['cost_reduction_pct']:.1f}% cost reduction"
+            },
+            'time_saved': {
+                'value': self.format_number(metrics['time_saved_hours']),
+                'raw_value': metrics['time_saved_hours'],
+                'label': 'Hours Saved',
+                'icon': '⏱️',
+                'color': '#3498db',
+                'subtitle': f"≈ {self.hours_to_days(metrics['time_saved_hours'])} of work"
+            },
+            'payback_period': {
+                'value': f"{metrics['payback_months']:.1f}",
+                'raw_value': metrics['payback_months'],
+                'label': 'Payback Period',
+                'icon': '🎯',
+                'color': '#9b59b6',
+                'subtitle': 'months to break even'
+            },
+            'energy_value': {
+                'value': self.format_currency(metrics['energy_value']),
+                'raw_value': metrics['energy_value'],
+                'label': 'Energy Value',
+                'icon': '⚡',
+                'color': '#f39c12',
+                'subtitle': f"{self.format_number(metrics['additional_energy_yield_kwh'])} kWh/year"
+            },
+            'panel_count': {
+                'value': self.format_number(metrics['panel_count']),
+                'raw_value': metrics['panel_count'],
+                'label': 'Panels Protected',
+                'icon': '☀️',
+                'color': '#e74c3c',
+                'subtitle': f"{metrics['farm_size_mw']:.1f} MW farm"
+            },
+            'total_benefit': {
+                'value': self.format_currency(metrics['total_annual_benefit']),
+                'raw_value': metrics['total_annual_benefit'],
+                'label': 'Total Annual Benefit',
+                'icon': '📈',
+                'color': '#1abc9c',
+                'subtitle': 'savings + energy value'
+            }
+        }
+    
+    def generate_kpi_summary(self, metrics):
+        """Generate simplified summary for display"""
+        kpis = self.get_kpi_cards(metrics)
+        
+        summary = []
+        summary.append(f"☀️ {metrics['farm_size_mw']:.1f} MW Solar Farm Analysis")
+        summary.append(f"📊 {self.format_number(metrics['panel_count'])} panels | {metrics['inspection_frequency_increase']} inspections/year")
+        summary.append("")
+        summary.append("🎯 KEY HIGHLIGHTS:")
+        summary.append(f"   • Save {self.format_currency(metrics['annual_savings'])} annually ({metrics['cost_reduction_pct']:.0f}% reduction)")
+        summary.append(f"   • Free up {self.hours_to_days(metrics['time_saved_hours'])} of labor")
+        summary.append(f"   • ROI payback in {metrics['payback_months']:.1f} months")
+        summary.append("")
+        summary.append("💡 WHAT THIS MEANS:")
+        summary.append("   • 3x more frequent inspections (quarterly → monthly)")
+        summary.append("   • 15% better defect detection accuracy")
+        summary.append("   • Reduced safety risks from electrical failures")
+        
+        return "\n".join(summary)
 
 
 if __name__ == '__main__':
