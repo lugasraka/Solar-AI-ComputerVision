@@ -15,6 +15,7 @@ import gradio as gr
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from PIL import Image
 
 # Add parent directory to path for imports
@@ -374,23 +375,47 @@ def create_business_charts(metrics):
     """Create comprehensive business visualization charts"""
     fig = plt.figure(figsize=(16, 5))
     
-    # Chart 1: Cost Comparison (Donut)
-    from matplotlib.patches import Circle
+    # Chart 1: Side-by-Side Cost Comparison Bar Chart
     ax1 = plt.subplot(131)
-    cost_data = [metrics['manual_annual_cost'], metrics['ai_annual_cost']]
-    colors1 = ['#e74c3c', '#27ae60']
-    ax1.pie(cost_data, labels=['Manual', 'AI-Powered'], 
-            autopct='%1.0f%%', colors=colors1,
-            startangle=90, pctdistance=0.75)
-    # Draw circle for donut
-    centre_circle = Circle((0,0), 0.50, fc='white')
-    ax1.add_patch(centre_circle)
-    ax1.set_title('Annual Cost Breakdown', fontsize=14, fontweight='bold', pad=20)
     
-    # Add center text
-    total = sum(cost_data)
-    ax1.text(0, 0, f'${total/1000:.0f}K\nTotal', ha='center', va='center', 
-            fontsize=12, fontweight='bold')
+    # Data
+    categories = ['Manual\nInspection', 'AI-Powered\nInspection']
+    costs = [metrics['manual_annual_cost'], metrics['ai_annual_cost']]
+    colors = ['#e74c3c', '#27ae60']
+    
+    # Create bars
+    bars = ax1.bar(categories, costs, color=colors, alpha=0.8, width=0.6, edgecolor='white', linewidth=2)
+    
+    # Add value labels on bars
+    for bar, cost in zip(bars, costs):
+        height = bar.get_height()
+        label = f'${cost/1000:.0f}K' if cost >= 1000 else f'${cost:.0f}'
+        ax1.text(bar.get_x() + bar.get_width()/2., height,
+                label, ha='center', va='bottom', fontsize=14, fontweight='bold')
+    
+    # Add savings annotation
+    savings = metrics['annual_savings']
+    savings_pct = metrics['cost_reduction_pct']
+    y_max = max(costs) * 1.2
+    
+    # Draw savings arrow and text
+    ax1.annotate('', xy=(1, costs[1] + y_max * 0.05), xytext=(0, costs[0] - y_max * 0.05),
+                arrowprops=dict(arrowstyle='->', color='#3498db', lw=2))
+    ax1.text(0.5, (costs[0] + costs[1]) / 2 + y_max * 0.1,
+            f'Save\n${savings/1000:.0f}K\n({savings_pct:.0f}%)',
+            ha='center', va='center', fontsize=12, fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='#3498db', alpha=0.2))
+    
+    # Styling
+    ax1.set_ylabel('Annual Cost (USD)', fontsize=12, fontweight='bold')
+    ax1.set_title('Annual Cost Comparison\nApple-to-Apple', fontsize=14, fontweight='bold', pad=20)
+    ax1.set_ylim(0, y_max)
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.grid(axis='y', alpha=0.3, linestyle='--')
+    
+    # Format y-axis as currency
+    ax1.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x/1000:.0f}K'))
     
     # Chart 2: Benefits Breakdown (Horizontal Bar)
     ax2 = plt.subplot(132)
