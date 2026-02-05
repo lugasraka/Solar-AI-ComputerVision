@@ -692,7 +692,7 @@ def create_interface():
         gr.Markdown("---")
         gr.Markdown("""
         **SolarVision AI** | Automated PV Panel Defect Detection System  
-        Dual Model Support: SVM (96.8%) & CNN with Grad-CAM (95.8%) | Dataset: [Kaggle "PV Panel Defect Dataset"](https://www.kaggle.com/datasets/alicjalena/pv-panel-defect-dataset)
+        Dual Model Support: SVM (96.8%) & CNN with Grad-CAM (95.8%) | Dataset: [Kaggle "PV Panel Defect Dataset"](https://www.kaggle.com/datasets/alicjalena/pv-panel-defect-dataset) | Product Manager: [Raka Adrianto](https://www.linkedin.com/in/lugasraka/)
         """)
     
     return demo
