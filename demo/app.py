@@ -528,9 +528,6 @@ if __name__ == "__main__":
         share=True,  # Generate public link
         show_error=True,
         quiet=False,
-        theme=gr.themes.Soft().set(
-            body_font=gr.themes.GoogleFont("Inter"),
-            header_font=gr.themes.GoogleFont("Inter")
-        ),
+        theme=gr.themes.Soft(font=gr.themes.GoogleFont("Inter")),
         allowed_paths=[tempfile.gettempdir(), "outputs"]  # Allow access to temp and outputs directories
     )
