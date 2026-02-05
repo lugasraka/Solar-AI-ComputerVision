@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-SolarVision AI is a production-ready machine learning system that automates defect detection in solar panel installations using standard RGB imagery. The system employs a hybrid deep learning architecture (ResNet18 feature extraction + SVM classification) to identify six critical defect types with **>93% accuracy**.
+SolarVision AI is a production-ready machine learning system that automates defect detection in solar panel installations using standard RGB imagery. The system employs a hybrid deep learning architecture (ResNet18 feature extraction + SVM classification) to identify six critical defect types with **96.84% accuracy**.
 
 ### Business Value
 
@@ -108,7 +108,7 @@ SVM Classifier (RBF kernel)
 ```
 
 **Key Advantages**:
-- **95.5% accuracy** (published benchmark)
+- **96.84% accuracy** on test set (exceeds 95.5% published benchmark)
 - Computationally efficient (<30ms inference)
 - Edge-ready for UAV deployment
 - Resistant to overfitting on small datasets
@@ -177,33 +177,32 @@ Solar-AI-ComputerVision/
 
 ### Model Performance
 
-| Model | Accuracy | Precision | Recall | F1-Score | Inference |
-|-------|----------|-----------|--------|----------|-----------|
-| **ResNet18 + SVM** | **95.5%** | 94.2% | 93.8% | 94.0% | **<30ms** |
-| End-to-End ResNet18 | 92.3% | 91.5% | 90.8% | 91.1% | ~40ms |
-| EfficientNet-B0 | 93.1% | 92.4% | 91.9% | 92.1% | ~45ms |
+| Model | Accuracy | Precision | Recall | F1-Score |
+|-------|----------|-----------|--------|----------|
+| **ResNet18 + SVM** | **96.84%** | 96.90% | 96.98% | 96.87% |
+| End-to-End ResNet18 | 95.79% | 96.02% | 96.13% | 96.01% |
 
-*Published benchmark from PRZEGLĄD ELEKTROTECHNICZNY 2025*
+*Evaluated on held-out test set (95 images). Published benchmark: 95.5% (PRZEGLĄD ELEKTROTECHNICZNY 2025).*
 
 ### Per-Class Performance
 
 | Class | Precision | Recall | F1-Score |
 |-------|-----------|--------|----------|
-| Clean | 97.2% | 95.8% | 96.5% |
-| Bird-drop | 93.5% | 92.1% | 92.8% |
-| Dusty | 91.8% | 89.7% | 90.7% |
-| Electrical-damage | 94.6% | 93.2% | 93.9% |
-| Physical-damage | 92.9% | 91.5% | 92.2% |
-| Snow Covered | 88.4% | 86.3% | 87.3% |
-| **Macro Average** | **93.1%** | **91.4%** | **92.2%** |
+| Bird-drop | 100.0% | 94.12% | 96.97% |
+| Clean | 94.44% | 94.44% | 94.44% |
+| Dusty | 94.12% | 100.0% | 96.97% |
+| Electrical-damage | 92.86% | 100.0% | 96.30% |
+| Physical-Damage | 100.0% | 93.33% | 96.55% |
+| Snow-Covered | 100.0% | 100.0% | 100.0% |
+| **Macro Average** | **96.90%** | **96.98%** | **96.87%** |
 
 ### Key Findings
 
-1. **Hybrid approach outperforms end-to-end**: ResNet18+SVM achieves 3.2% higher accuracy
-2. **Clean class easiest to detect**: 97.2% precision (clear visual distinction)
-3. **Shadowing most challenging**: 88.4% precision (context-dependent, variable appearance)
-4. **Critical defects perform well**: Electrical (94.6%) and Physical (92.9%) precision
-5. **Expected confusions**: Bird-drop vs. Dusty (both involve surface contamination)
+1. **Hybrid approach outperforms end-to-end**: ResNet18+SVM achieves 1.05% higher accuracy than fine-tuned CNN
+2. **Both models exceed published benchmark**: 96.84% and 95.79% vs. published 95.5%
+3. **Snow-Covered easiest to detect**: 100% across all metrics (distinct visual pattern)
+4. **Critical defects perform well**: Electrical-damage (100% recall) and Physical-Damage (100% precision)
+5. **Clean class hardest for hybrid**: 94.44% precision (occasional confusion with subtle defects)
 
 ---
 
@@ -234,7 +233,7 @@ Solar-AI-ComputerVision/
 
 ```bibtex
 @software{solarvision_ai_2026,
-  author = {Your Name},
+  author = {Raka Adrianto, Lugas},
   title = {SolarVision AI: Automated PV Panel Defect Detection},
   year = {2026},
   url = {https://github.com/lugasraka/Solar-AI-ComputerVision}
