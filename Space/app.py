@@ -73,12 +73,20 @@ def predict_single(image):
         return None, "Please upload an image", "", ""
     
     try:
-        # Save uploaded image temporarily
-        temp_path = Path(tempfile.gettempdir()) / f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-        if isinstance(image, np.ndarray):
+        # Handle different image input types from Gradio
+        if isinstance(image, str):
+            # Image is already a file path
+            temp_path = Path(image)
+        elif isinstance(image, np.ndarray):
+            # Image is a numpy array, save it
+            temp_path = Path(tempfile.gettempdir()) / f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             Image.fromarray(image).save(temp_path)
-        else:
+        elif hasattr(image, 'save'):
+            # Image is a PIL Image object
+            temp_path = Path(tempfile.gettempdir()) / f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             image.save(temp_path)
+        else:
+            return None, f"Unsupported image type: {type(image)}", "", ""
         
         # Get prediction
         pred = load_predictor().predict(str(temp_path))
@@ -114,10 +122,20 @@ def predict_single(image):
         
         plt.tight_layout()
         
-        # Clean up temp file
-        temp_path.unlink(missing_ok=True)
+        # Load image for display (if it was a temp file we created, keep it for display then clean up)
+        if isinstance(image, str):
+            # Original was a file path, load it for display
+            display_image = Image.open(image)
+        elif isinstance(image, np.ndarray):
+            display_image = image
+        else:
+            display_image = image
         
-        return image, result_html, fig, pred['filename']
+        # Clean up temp file only if we created it
+        if not isinstance(image, str):
+            temp_path.unlink(missing_ok=True)
+        
+        return display_image, result_html, fig, pred['filename']
         
     except Exception as e:
         return image, f"Error: {str(e)}", None, ""
