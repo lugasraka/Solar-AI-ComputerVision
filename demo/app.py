@@ -238,7 +238,7 @@ def calculate_business(farm_size):
         bars1 = ax1.bar(cost_labels, cost_values, color=['#e74c3c', '#27ae60'])
         ax1.set_ylabel('Annual Cost (USD)', fontsize=12)
         ax1.set_title('Cost Comparison', fontsize=14, fontweight='bold')
-        ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1000:.0f}K'))
+        ax1.set_yticklabels([f'${x/1000:.0f}K' for x in ax1.get_yticks()])
         
         # Add value labels
         for bar in bars1:
@@ -253,7 +253,7 @@ def calculate_business(farm_size):
         bars2 = ax2.bar(benefit_labels, benefit_values, color=['#3498db', '#f39c12'])
         ax2.set_ylabel('Annual Value (USD)', fontsize=12)
         ax2.set_title('Annual Benefits', fontsize=14, fontweight='bold')
-        ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1000:.0f}K'))
+        ax2.set_yticklabels([f'${x/1000:.0f}K' for x in ax2.get_yticks()])
         
         # Add value labels
         for bar in bars2:
@@ -305,7 +305,7 @@ def create_interface():
     
     timer.start(warning_callback=show_warning, shutdown_callback=shutdown_demo)
     
-    with gr.Blocks(title=APP_TITLE, theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title=APP_TITLE) as demo:
         
         # Header
         gr.Markdown(APP_DESCRIPTION)
@@ -391,12 +391,8 @@ def create_interface():
         Model: ResNet18 + SVM (96.8% accuracy) | Dataset: Alicja Lenarczyk, PhD
         """)
         
-        # Timer update (every 10 seconds)
-        demo.load(
-            fn=get_timer_status,
-            outputs=timer_status,
-            every=10
-        )
+        # Timer will update on user interactions only
+        # Note: Auto-shutdown works in background but display updates on activity
     
     return demo
 
@@ -411,5 +407,6 @@ if __name__ == "__main__":
         server_port=7860,
         share=True,  # Generate public link
         show_error=True,
-        quiet=False
+        quiet=False,
+        theme=gr.themes.Soft()
     )
