@@ -422,7 +422,7 @@ def create_business_charts(metrics):
     methodology_text = f"""Method: Manual=${calculator.manual_cost_per_panel}/panel × {calculator.manual_inspections_per_year}/year
 AI=${calculator.ai_cost_per_panel}/panel × {calculator.ai_inspections_per_year}/year
 Savings=${savings/1000:.0f}K ({savings_pct:.0f}% reduction)"""
-    ax1.text(0.5, -0.15, methodology_text, transform=ax1.transAxes,
+    ax1.text(0.5, -0.35, methodology_text, transform=ax1.transAxes,
             ha='center', va='top', fontsize=8, style='italic', color='#666',
             bbox=dict(boxstyle='round,pad=0.3', facecolor='#f0f0f0', alpha=0.5))
     
@@ -451,53 +451,73 @@ Savings=${savings/1000:.0f}K ({savings_pct:.0f}% reduction)"""
 • {energy_details['energy_saved_mwh']:.0f} MWh saved through early detection
 • Based on 15% better detection, 3 months earlier
 • Energy value: ${metrics['energy_value']/1000:.0f}K/year"""
-        ax2.text(0.5, -0.15, energy_text, transform=ax2.transAxes,
+        ax2.text(0.5, -0.35, energy_text, transform=ax2.transAxes,
                 ha='center', va='top', fontsize=8, style='italic', color='#666',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='#fff9e6', alpha=0.7))
     
-    # Chart 3: Cost Reduction Gauge
+    # Chart 3: Cost Reduction Metric Card
     ax3 = plt.subplot(133)
     reduction_pct = metrics['cost_reduction_pct']
     
-    # Create gauge
-    theta = np.linspace(0, np.pi, 100)
-    r = 1.0
+    # Clear background
+    ax3.set_facecolor('#f8f9fa')
     
-    # Background arc
-    ax3.fill_between(np.cos(theta), np.sin(theta), 0, alpha=0.1, color='gray')
+    # Draw a clean rounded rectangle background
+    from matplotlib.patches import FancyBboxPatch
+    box = FancyBboxPatch((0.05, 0.05), 0.9, 0.9,
+                         boxstyle="round,pad=0.02,rounding_size=0.05",
+                         facecolor='white', edgecolor='#27ae60', linewidth=3,
+                         transform=ax3.transAxes, zorder=1)
+    ax3.add_patch(box)
     
-    # Value arc
-    value_theta = theta[int(reduction_pct)] if reduction_pct < 100 else theta[-1]
-    value_arc = theta[:int(reduction_pct)+1] if reduction_pct < 100 else theta
-    ax3.fill_between(np.cos(value_arc), np.sin(value_arc), 0, alpha=0.6, color='#27ae60')
+    # Large percentage display
+    ax3.text(0.5, 0.65, f'{reduction_pct:.1f}%', 
+            ha='center', va='center', transform=ax3.transAxes,
+            fontsize=48, fontweight='bold', color='#27ae60')
     
-    # Add needle
-    needle_angle = np.pi * (1 - reduction_pct / 100)
-    ax3.arrow(0, 0, 0.8*np.cos(needle_angle), 0.8*np.sin(needle_angle),
-             head_width=0.05, head_length=0.05, fc='#2c3e50', ec='#2c3e50')
+    # Subtitle
+    ax3.text(0.5, 0.45, 'Cost Reduction', 
+            ha='center', va='center', transform=ax3.transAxes,
+            fontsize=14, color='#666')
     
-    # Center text
-    ax3.text(0, -0.3, f'{reduction_pct:.1f}%', ha='center', va='center',
-            fontsize=24, fontweight='bold', color='#27ae60')
-    ax3.text(0, -0.5, 'Cost Reduction', ha='center', va='center',
-            fontsize=11, color='#7f8c8d')
+    # Simple horizontal bar showing the percentage
+    bar_width = 0.7
+    bar_height = 0.08
+    bar_y = 0.25
     
-    ax3.set_xlim(-1.2, 1.2)
-    ax3.set_ylim(-0.8, 1.2)
-    ax3.set_aspect('equal')
-    ax3.axis('off')
+    # Background bar (gray)
+    ax3.barh(bar_y, bar_width, height=bar_height, 
+            left=(1-bar_width)/2, transform=ax3.transAxes,
+            color='#e0e0e0', zorder=2)
+    
+    # Filled bar (green) - shows the reduction percentage
+    fill_width = bar_width * (reduction_pct / 100)
+    ax3.barh(bar_y, fill_width, height=bar_height,
+            left=(1-bar_width)/2, transform=ax3.transAxes,
+            color='#27ae60', alpha=0.8, zorder=3)
+    
+    # Labels for the bar
+    ax3.text(0.5, 0.12, f'Save ${reduction_pct:.0f} of every $100 spent', 
+            ha='center', va='center', transform=ax3.transAxes,
+            fontsize=10, style='italic', color='#666')
+    
+    # Title
     ax3.set_title('Cost Efficiency\nImprovement', fontsize=14, fontweight='bold', pad=20)
     
-    # Add gauge interpretation note
+    # Turn off axes
+    ax3.set_xlim(0, 1)
+    ax3.set_ylim(0, 1)
+    ax3.axis('off')
+    
+    # Add explanation note
     gauge_text = f"""Formula: (Manual Cost - AI Cost) / Manual Cost × 100
-Your Result: {reduction_pct:.1f}% operational cost reduction
-Interpretation: Save ${reduction_pct:.0f} of every $100 spent on manual inspection"""
-    ax3.text(0.5, -0.15, gauge_text, transform=ax3.transAxes,
+Your Result: {reduction_pct:.1f}% operational cost reduction"""
+    ax3.text(0.5, -0.25, gauge_text, transform=ax3.transAxes,
             ha='center', va='top', fontsize=8, style='italic', color='#666',
             bbox=dict(boxstyle='round,pad=0.3', facecolor='#e8f5e9', alpha=0.5))
     
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.25)  # Make room for notes
+    plt.subplots_adjust(bottom=0.35)  # Make room for notes
     return fig
 
 
