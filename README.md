@@ -269,17 +269,6 @@ Solar-AI-ComputerVision/
 
 ---
 
-## 🚀 Interactive Demo
-
-### Try It Online
-[![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces/YOUR_USERNAME/solarvision-ai)
-
-**Live Demo Features:**
-- 📷 **Single Image Analysis** - Upload a solar panel image and get instant predictions
-- 📁 **Batch Processing** - Process multiple images via ZIP file upload  
-- 💰 **Business Impact Calculator** - Calculate ROI and cost savings for your solar farm
-- 📊 **Export Results** - Download predictions as CSV or professional PDF reports
-
 ### Run Locally
 
 ```bash
