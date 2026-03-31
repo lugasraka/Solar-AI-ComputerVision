@@ -281,8 +281,6 @@ Access the demo at: `http://localhost:7860`
 
 ---
 
----
-
 ## Roadmap
 
 ### Phase 1: MVP ✅ (Completed)
